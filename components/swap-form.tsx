@@ -1,21 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi';
+import { useAccount  } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
 import { ArrowDownUp, Loader2, Settings, Info } from 'lucide-react';
 import { TokenSelectDialog } from './token-select-dialog';
 import { SwapSettings } from './swap-settings';
-import { lifi, Token, SwapRoute, getTokenBalance } from '@/lib/lifi';
+import {  Token, SwapRoute, getLifiTokenBalance } from '@/lib/lifi';
 import { useToast } from '@/hooks/use-toast';
 import { formatUnits, parseUnits } from 'ethers';
+import { executeRoute, getRoutes, getTokens } from '@lifi/sdk';
 
 export function SwapForm() {
-  const { address } = useAccount();
-  const { chain } = useNetwork();
-  const { switchNetwork } = useSwitchNetwork();
+  const { address ,chain } = useAccount();
   const { toast } = useToast();
 
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -32,7 +31,7 @@ export function SwapForm() {
   useEffect(() => {
     const fetchTokens = async () => {
       try {
-        const tokenResponse = await lifi.getTokens();
+        const tokenResponse = await getTokens();
         const allTokens = Object.values(tokenResponse.tokens).flat();
         setTokens(allTokens);
 
@@ -60,12 +59,12 @@ export function SwapForm() {
       if (!address) return;
 
       if (fromToken) {
-        const balance = await getTokenBalance(fromToken, address);
+        const balance = await getLifiTokenBalance(fromToken, address);
         setFromBalance(balance);
       }
 
       if (toToken) {
-        const balance = await getTokenBalance(toToken, address);
+        const balance = await getLifiTokenBalance(toToken, address);
         setToBalance(balance);
       }
     };
@@ -75,10 +74,10 @@ export function SwapForm() {
 
   useEffect(() => {
     const getRoute = async () => {
-      // if (!fromToken || !toToken || !amount || !address || Number(amount) <= 0) {
-      //   setRoute(undefined);
-      //   return;
-      // }
+      if (!fromToken || !toToken || !amount || !address || Number(amount) <= 0) {
+        setRoute(undefined);
+        return;
+      }
       
       setLoading(true);
       try {
@@ -97,7 +96,7 @@ export function SwapForm() {
           },
         };
 
-        const routeResponse = await lifi.getRoutes(routeRequest);
+        const routeResponse = await getRoutes(routeRequest);
         
         if (routeResponse.routes.length > 0) {
           setRoute(routeResponse.routes[0] as SwapRoute);
@@ -131,22 +130,22 @@ export function SwapForm() {
     if (!route || !address) return;
 
     try {
-      if (chain?.id !== fromToken?.chainId) {
-        console.log(route, address,'000222')
-        await switchNetwork?.(fromToken?.chainId);
-        return;
-      }
-      const balance = await lifi.getTokenBalance(
-        signer,
-        route.fromToken.address
-      );
-      if (balance.lt(route.fromAmount)) {
-        throw new Error('余额不足');
-      }
+      // if (chain?.id !== fromToken?.chainId) {
+      //   console.log(route, address,'000222')
+      //   await switchNetwork?.(fromToken?.chainId);
+      //   return;
+      // }
+      // const balance = await getlifiTokenBalance(
+      //   signer,
+      //   route.fromToken.address
+      // );
+      // if (balance.lt(route.fromAmount)) {
+      //   throw new Error('余额不足');
+      // }
       
 
       setLoading(true);
-      const result = await lifi.executeRoute(signer, route.steps[0]);
+      const result = await executeRoute(route);
       console.log('Swap result:', result);
       
       toast({
@@ -178,8 +177,8 @@ export function SwapForm() {
   };
 
   const formatBalance = (balance: string, token?: Token) => {
-    if (!token) return '0';
-    return Number(formatUnits(balance, token.decimals)).toFixed(4);
+    if (!token ||!balance) return '0';
+    return Number(formatUnits(balance, token?.decimals)).toFixed(4);
   };
 
   return (

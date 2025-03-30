@@ -1,8 +1,4 @@
-import { LiFi, Token as LiFiToken, Route } from '@lifi/sdk';
-
-export const lifi = new LiFi({
-  integrator: 'Custom Token Swap',
-});
+import {  getTokenBalance, Token as LiFiToken, Route } from '@lifi/sdk';
 
 export interface Token extends LiFiToken {
   balance?: string;
@@ -12,17 +8,13 @@ export interface SwapRoute extends Route {
   gasCost: string;
 }
 
-export const getTokenBalance = async (
+export const getLifiTokenBalance = async (
   token: Token,
   address: string
 ): Promise<string> => {
   try {
-    const balance = await lifi.getTokenBalance({
-      chainId: token.chainId,
-      tokenAddress: token.address,
-      walletAddress: address,
-    });
-    return balance.toString();
+    const balance = await getTokenBalance(address, token);
+    return balance?.toString() || '';
   } catch (error) {
     console.error('Failed to fetch token balance:', error);
     return '0';

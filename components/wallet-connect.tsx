@@ -1,50 +1,53 @@
-'use client';
-
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+"use client";
+import {
+  injected,
+  useAccount,
+  useBalance,
+  useConnect,
+  useDisconnect,
+  useSwitchChain,
+} from "wagmi";
+import { Button } from "@/components/ui/button";
 
 export function WalletConnect() {
+  const { chains, switchChain } = useSwitchChain();
   const { address, isConnected } = useAccount();
-  const { connect, connectors, isLoading, pendingConnector } = useConnect();
+  const { connect, connectors } = useConnect();
   const { disconnect } = useDisconnect();
-  const { toast } = useToast();
 
   if (isConnected) {
     return (
       <div className="flex items-center gap-4">
-        <span className="text-sm text-muted-foreground">
+        <div>
+        <div className="text-sm text-muted-foreground">
           {address?.slice(0, 6)}...{address?.slice(-4)}
-        </span>
-        <Button
-          variant="outline"
-          onClick={() => disconnect()}
-        >
+        </div>
+        <Button variant="outline" onClick={() => disconnect()}>
           Disconnect
         </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div>
-      {connectors.map((connector) => (
+       <div>
+      {connectors.map((connector: { id: string; name: string }) => (
         <Button
-          // disabled={!connector.ready}
+          style={{ margin: "12px 12px 12px 0" }}
           key={connector.id}
           onClick={() => {
-            console.log(connector,'xl')
-            connect({ connector });
-            toast({
-              title: 'Connecting wallet',
-              description: 'Please approve the connection in your wallet.',
+            console.log(connect, connector, "xlconnector");
+            connect({
+              connector: injected(),
             });
           }}
         >
-          Connect Wallet
-          {isLoading && connector.id === pendingConnector?.id && ' (connecting)'}
+          Connect with {connector.name}
         </Button>
       ))}
+      </div>
     </div>
   );
 }
