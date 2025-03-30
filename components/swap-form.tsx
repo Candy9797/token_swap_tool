@@ -105,7 +105,7 @@ export function SwapForm() {
           },
         };
 
-        const routeResponse = await getRoutes(routeRequest);
+        const routeResponse = await getRoutes(routeRequest as any);
 
         if (routeResponse.routes.length > 0) {
           setRoute(routeResponse.routes[0] as SwapRoute);
@@ -164,7 +164,7 @@ export function SwapForm() {
       });
 
       // Reset form
-      // setAmount('');
+      setAmount('');
       setRoute(undefined);
     } catch (error) {
       console.error("Swap failed:", error);
@@ -188,9 +188,6 @@ export function SwapForm() {
 
   const formatBalance = (balance: string, token?: Token) => {
     if (!token || !balance) return "0";
-
-    // 如果 balance 是对象，尝试提取其值
-    console.log(balance, token, "000000===");
     try {
       return Number(formatUnits(balance, token.decimals)).toFixed(4);
     } catch (error) {
