@@ -7,7 +7,7 @@ import { createClient, http } from 'viem';
 import { useSyncWagmiConfig } from '@lifi/wallet-management';
 import { getWalletClient, switchChain } from '@wagmi/core';
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { mainnet } from 'viem/chains';
+import { mainnet, bsc } from 'viem/chains';
 import { injected } from "wagmi/connectors";
 const queryClient = new QueryClient();
 queryClient.setDefaultOptions({
@@ -16,7 +16,7 @@ queryClient.setDefaultOptions({
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   },
 });
-const chains = [mainnet] as const;
+const chains = [mainnet, bsc] as const;
 
 const connectors: CreateConnectorFn[] = [injected()];
 
