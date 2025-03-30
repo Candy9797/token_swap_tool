@@ -1,9 +1,18 @@
 'use client';
-
+import { useEffect, useState } from 'react';
 import { WalletConnect } from '@/components/wallet-connect';
 import { SwapForm } from '@/components/swap-form';
 
 export default function Home() {
+  const [isClient, setIsClient] = useState(false);
+ // 确保组件只在客户端渲染
+ useEffect(() => {
+  setIsClient(true);
+}, []);
+
+if (!isClient) {
+  return null; 
+}
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">

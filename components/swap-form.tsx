@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount  } from 'wagmi';
+import { useAccount, useBalance  } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
@@ -15,6 +15,9 @@ import { executeRoute, getRoutes, getTokens } from '@lifi/sdk';
 
 export function SwapForm() {
   const { address ,chain } = useAccount();
+  const { data: balance } = useBalance({
+    address
+  });
   const { toast } = useToast();
 
   const [tokens, setTokens] = useState<Token[]>([]);
@@ -52,7 +55,7 @@ export function SwapForm() {
       }
     };
     fetchTokens();
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     const updateBalances = async () => {
@@ -60,6 +63,7 @@ export function SwapForm() {
 
       if (fromToken) {
         const balance = await getLifiTokenBalance(fromToken, address);
+        
         setFromBalance(balance);
       }
 
@@ -123,30 +127,31 @@ export function SwapForm() {
 
     const debounce = setTimeout(getRoute, 500);
     return () => clearTimeout(debounce);
-  }, [fromToken, toToken, amount, address, slippage]);
+  }, [fromToken, toToken, amount, address, slippage, toast]);
 
   const handleSwap = async () => {
     console.log(route, address,chain?.id,fromToken?.chainId,'000')
     if (!route || !address) return;
 
     try {
-      // if (chain?.id !== fromToken?.chainId) {
-      //   console.log(route, address,'000222')
-      //   await switchNetwork?.(fromToken?.chainId);
-      //   return;
-      // }
-      // const balance = await getlifiTokenBalance(
+      if (chain?.id !== fromToken?.chainId) {
+        console.log(route, address,'000222')
+        // await switchNetwork?.(fromToken?.chainId);
+        return;
+      }
+      // const balance = await getLifiTokenBalance(
       //   signer,
       //   route.fromToken.address
       // );
       // if (balance.lt(route.fromAmount)) {
       //   throw new Error('余额不足');
       // }
+      console.log('Swap result:',balance , route, executeRoute);
       
 
       setLoading(true);
       const result = await executeRoute(route);
-      console.log('Swap result:', result);
+      console.log('Swap result2:', result);
       
       toast({
         title: 'Success',
@@ -177,8 +182,16 @@ export function SwapForm() {
   };
 
   const formatBalance = (balance: string, token?: Token) => {
-    if (!token ||!balance) return '0';
-    return Number(formatUnits(balance, token?.decimals)).toFixed(4);
+    if (!token || !balance) return '0';
+  
+    // 如果 balance 是对象，尝试提取其值
+    console.log(balance,token, '000000===')
+    try {
+      return Number(formatUnits(balance, token.decimals)).toFixed(4);
+    } catch (error) {
+      console.error('Failed to format balance:', error);
+      return '0';
+    }
   };
 
   return (
@@ -282,7 +295,7 @@ export function SwapForm() {
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Gas Cost</span>
-            <span>{route.gasCost}</span>
+            <span>{route.gasCostUSD            }</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Slippage Tolerance</span>

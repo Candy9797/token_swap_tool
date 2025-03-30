@@ -14,7 +14,8 @@ export const getLifiTokenBalance = async (
 ): Promise<string> => {
   try {
     const balance = await getTokenBalance(address, token);
-    return balance?.toString() || '';
+    console.log(balance,'xlxlbalance')
+    return balance?.amount?.toString() || '';
   } catch (error) {
     console.error('Failed to fetch token balance:', error);
     return '0';
